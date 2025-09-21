@@ -1,0 +1,30 @@
+# Use a Node.js base image
+FROM node:20-alpine
+
+# Set the working directory
+WORKDIR /app
+
+# Install pnpm globally
+RUN npm install -g pnpm
+
+# Copy package.json and pnpm-lock.yaml to install dependencies
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY chef-agent/package.json chef-agent/pnpm-lock.yaml ./chef-agent/
+COPY chefshot/package.json chefshot/pnpm-lock.yaml ./chefshot/
+COPY template/package.json template/pnpm-lock.yaml ./template/
+COPY test-kitchen/package.json test-kitchen/pnpm-lock.yaml ./test-kitchen/
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy the rest of the application code
+COPY . .
+
+# Build the Remix application
+RUN pnpm run build
+
+# Expose the port the app runs on
+EXPOSE 3000
+
+# Start the Remix production server
+CMD ["pnpm", "run", "start"]
